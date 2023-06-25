@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+.sach{
+
+
+}
+.pole{
+	padding:0;
+  margin:0;
+	display:inline-block;
+  background-color:red;
+  border:1px solid black;
+  text-align:center;
+	position:relative;
+
+}
+.rad {
+
+	height:50px;
+}
+.panacik {
+	position:absolute;
+  top:7px;
+	left:17px;
+  font-size:30px;
+
+
+}
+.timer_con{
+	position:inline;
+	background-color:black;
+	width:50px;
+	height:60px;
+	position:absolute;
+	left:450px;
+	top:180px;
+	color:white;
+
+}
+.timer{
+	text-align: center;
+	padding:5px;
+}
+</style>
+</head>
+<body>
+
+<div class = "sach"></div>
+
+
+<!-- <div class='timer_con'>
+<div class = 'timer'>4:00</div>
+<div class = 'timer'>4:00</div>
+</div> -->
+<script>
+class sach {
+    rozmer = 8;
+		container = document.getElementsByClassName('sach')[0];
+    sirka_pola;
+		clicked_field=[];
+		king_poz={'red':[4,0],'green':[4,7]}
+		clicked=false;
+		na_tahu='green'
+		king_option=[]
+		activ_pawn=[]
+		pawn= {'red':{'vpred':[[0,1],[0,2]],'utok':[[1,1],[-1,1]]}, 'green':{'vpred':[[0,-1],[0,-2]],'utok':[[-1,-1],[1,-1]]}};
+   	pole_figurky = [];
+		tower=[]
+		sach_mat_pole=[]
+		horse=[[-1,-2],[-2,-1],[1,-2],[-1,2],[2,-1],[-2,1],[2,1],[1,2]]
+		po_kliknuti(pole){
+			for (var i = 0; i < pole.length; i++) {
+				try {
+
+
+				this.container.children[pole[i][1]].children[pole[i][0]].style.backgroundColor = 'yellow';
+			}catch {
+
+			}
+			}
+		}
+
+    add_pes(){
+    	var farba='red';
+    	for (let i=1;i<8;i+=5){
+
+        	for (let x=0;x<8;x++){
+        		this.pole_figurky[i][x] = ['P',farba];
+
+        	}
+            farba='green';
+        }
+    }
+    add_hl(){
+    	let figurkyH = ['T','H','B','Q','K','B','H','T'];
+        var farba='red';
+       	for (let i=0;i<8;i+=7){
+
+        	for (let x=0;x<8;x++){
+        		this.pole_figurky[i][x] = [figurkyH[x],farba];
+
+        	}
+            farba='green';
+        }
+    }
+	  constructor(sirka_pola){
+    	this.sirka_pola =sirka_pola;
+
+
+
+    }
+    vytvor_polia(){
+			//tower_movement
+
+			// for (var y = -8; y < 16; y++) {
+			// 	if (y == 0){
+			// 		continue
+			// 	}
+			// 	this.tower.push([0,y]);
+			//
+			// }
+			// for (var y = -8; y < 16; y++) {
+			// 	if (y == 0){
+			// 		continue
+			// 	}
+			// 	this.tower.push([y,0]);
+			//
+			// }
+
+
+
+
+			//pole
+    	for (let y = 0;y<this.rozmer;y++){
+
+          	this.pole_figurky[y] = [];
+    		for (let x = 0;x<this.rozmer;x++){
+            	this.pole_figurky[y][x] =  ['',''];
+
+
+    		}
+
+
+   	 	}
+    }
+	klike(event){
+
+			var x = Math.floor((event.x-10)/50);
+			let y = Math.floor((event.y-10)/50);
+
+		if (this.clicked){
+
+			for (let q = 0;q<this.clicked_field.length;q++){
+
+				if (x == this.clicked_field[q][0] && y == this.clicked_field[q][1]){
+					if (this.pole_figurky[y][x][0]=='K'){
+						alert('you lost,'+this.na_tahu+' won')
+					}
+					this.pole_figurky[y][x][0] = this.activ_pawn[0];
+					this.pole_figurky[y][x][1] = this.activ_pawn[3];
+
+					this.pole_figurky[this.activ_pawn[2]][this.activ_pawn[1]][0]='';
+					this.pole_figurky[this.activ_pawn[2]][this.activ_pawn[1]][1]='';
+					// sach mat code
+					// this.sach_mat();
+					if (this.activ_pawn[0] == 'K'){
+						this.king_poz[this.activ_pawn[3]] = [x,y]
+					}
+
+					this.king_option=[]
+
+
+
+
+					if (this.na_tahu == 'green'){
+						this.na_tahu = 'red'
+					}else{
+						this.na_tahu = 'green'
+					}
+					this.sach();
+
+				}
+			}
+			let sach =document.getElementsByClassName('sach')[0];
+			while (sach.firstChild) {
+				sach.removeChild(sach.lastChild);
+			}
+			this.activ_pawn=[];
+			this.clicked_field=[];
+
+
+			this.sachovnica();
+
+			this.clicked = false;
+
+		}
+		if (!this.clicked){
+
+			var pozicia = this.pole_figurky[Math.floor((event.y-10)/50)][Math.floor((event.x-10)/50)];
+
+			if (pozicia[1] == this.na_tahu){
+				this.pawn_movement(pozicia,x,y,this.clicked_field,false);
+				this.tower_movement(pozicia,x,y,this.clicked_field,'T')
+				this.kral_movement(pozicia,x,y,this.clicked_field,false)
+				this.horse_movement(pozicia,x,y,this.clicked_field)
+				this.queen_movement(pozicia,x,y,this.clicked_field)
+				this.strelec_movement(pozicia,x,y,this.clicked_field,'B')
+
+				this.activ_pawn = [pozicia[0],x,y,pozicia[1]];
+				this.po_kliknuti(this.clicked_field);
+
+			}
+
+			this.sach_mat_pole=[]
+			this.clicked = true;
+
+
+	}
+
+
+	}
+	sach(){
+		this.find_all();
+		for (var i = 0; i < this.sach_mat_pole.length; i++) {
+			console.log(this.sach_mat_pole[i])
+			if ((this.king_poz[this.na_tahu][0] == this.sach_mat_pole[i][0]) && (this.king_poz[this.na_tahu][1] == this.sach_mat_pole[i][1])){
+				alert('sach')
+
+			}
+		}
+		this.po_kliknuti(this.sach_mat_pole)
+		console.log(1)
+		// for (var y1 = 0; y1 < this.pole_figurky.length; y1++) {
+		// 	for (var x1 = 0; x1 < this.pole_figurky[y1].length; x1++) {
+		//
+		// 		if ((this.pole_figurky[y1][x1][0] == 'K') && (this.pole_figurky[y1][x1][1] != this.na_tahu)){
+		//
+		// 		}
+		// 	}
+		// }
+	}
+	find_all(){
+
+			for (var y = 0; y < this.pole_figurky.length; y++) {
+				for (var x = 0; x < this.pole_figurky[y].length; x++) {
+
+
+					if (this.pole_figurky[y][x][1] != this.na_tahu){ //zmena
+
+						switch(this.pole_figurky[y][x][0]) {
+							case 'T':
+
+							this.tower_movement(this.pole_figurky[y][x],x,y,this.sach_mat_pole,'T')
+							break;
+							case 'P':
+							this.pawn_movement(this.pole_figurky[y][x],x,y,this.sach_mat_pole,'P',true)
+
+							break;
+							case 'H':
+							this.horse_movement(this.pole_figurky[y][x],x,y,this.sach_mat_pole,'H')
+							break;
+							case 'K':
+							this.kral_movement(this.pole_figurky[y][x],x,y,this.sach_mat_pole,false)
+							break;
+							case 'B':
+							this.strelec_movement(this.pole_figurky[y][x],x,y,this.sach_mat_pole,'B')
+							break;
+							case 'Q':
+
+							this.queen_movement(this.pole_figurky[y][x],x,y,this.sach_mat_pole,'Q')
+							break;
+
+						}
+
+					}
+				}
+			}
+		}
+
+	sach_mat(){
+		this.find_all()
+		for (var y1 = 0; y1 < this.pole_figurky.length; y1++) {
+			for (var x1 = 0; x1 < this.pole_figurky[y1].length; x1++) {
+
+				if ((this.pole_figurky[y1][x1][0] == 'K') && (this.pole_figurky[y1][x1][1] != this.na_tahu)){
+
+					this.king_option.push([y1,x1])
+					this.kral_movement(this.pole_figurky[y1][x1],x1,y1,this.clicked_field,'K',true)
+				}
+			}
+		}
+
+		this.po_kliknuti(this.sach_mat_pole)
+	}
+	queen_movement(pozicia,x,y,pole){
+		if (pozicia[0] == 'Q'){
+			this.strelec_movement(pozicia,x,y,pole,'Q')
+			this.tower_movement(pozicia,x,y,pole,'Q')
+		}
+
+	}
+	strelec_movement(pozicia,x,y,pole, kto){
+
+		if (pozicia[0] == kto){
+			for (var s = -1; s < 2; s=s+2) {
+			loop2:
+				for (var i = 1; i < 8; i++) {
+					try {
+						if ((this.pole_figurky[y+(s*i)][x+(s*i)][0] == '') || (this.pole_figurky[y+(s*i)][x+(s*i)][1] != pozicia[1])){
+							pole.push([x+(s*i),y+(s*i)])
+						}
+
+						if (this.pole_figurky[y+(s*i)][x+(s*i)][0] != ''){
+								break loop2
+						}
+
+					}catch {
+
+					}
+				}
+			}
+			loop1:
+					for (var s = -1; s < 2; s=s+2) {
+					loop2:
+						for (var i = 1; i < 8; i++) {
+							try {
+								if ((this.pole_figurky[y-(s*i)][x+(s*i)][0] == '') || (this.pole_figurky[y-(s*i)][x+(s*i)][1] != pozicia[1])){
+									pole.push([x+(s*i),y-(s*i)])
+								}
+
+								if (this.pole_figurky[y-(s*i)][x+(s*i)][0] != ''){
+										break loop2
+								}
+
+							}catch {
+
+							}
+						}
+					}
+
+		}
+	}
+
+	horse_movement(pozicia,x,y,pole){
+		if (pozicia[0] == 'H'){
+
+			for (let poz of this.horse) {
+				try{
+					if (this.pole_figurky[y+poz[1]][x+poz[0]][0] == '' || this.pole_figurky[y+poz[1]][x+poz[0]][1] != pozicia[1]){
+							this.clicked_field.push([x+poz[0],y+poz[1]])
+					}
+				}catch{
+
+				}
+			}
+
+		}
+	}
+	kral_movement(pozicia,x,y,pole,c_m){
+		if (pozicia[0] == 'K'){
+			for (var y1 = -1; y1 < 2; y1++) {
+				for (var x2 = -1; x2 < 2; x2++) {
+
+					try{
+						if ((this.pole_figurky[y+y1][x+x2][0] == '') || (this.pole_figurky[y+y1][x+x2][1] != pozicia[1])){
+							pole.push([x+x2,y+y1])
+
+							if (c_m){
+
+								this.king_option.push([y+y1,x+x2])
+							}
+
+						}
+
+					}catch{
+
+
+					}
+
+				}
+			}
+		}
+	}
+	tower_movement(pozicia,x,y,pole,kto){
+			if (pozicia[0] == kto){
+			loop1:
+					for (var s = -1; s < 2; s=s+2) {
+					loop2:
+						for (var i = 1; i < 8; i++) {
+							try {
+								if ((this.pole_figurky[y+(s*i)][x][0] == '') || (this.pole_figurky[y+(s*i)][x][1] != pozicia[1])){
+									pole.push([x,y+(s*i)])
+								}
+
+								if (this.pole_figurky[y+(s*i)][x][0] != ''){
+										break loop2
+								}
+
+							}catch {
+
+							}
+						}
+					}
+					loop1:
+							for (var s = -1; s < 2; s=s+2) {
+							loop2:
+								for (var i = 1; i < 8; i++) {
+									try {
+										if (this.pole_figurky[y][x+(s*i)][0] == ''){
+											pole.push([x+(s*i),y])
+										}
+
+										if (this.pole_figurky[y][x+(s*i)][0] != ''){
+												break loop2
+										}
+
+									}catch {
+
+									}
+								}
+							}
+
+
+			}
+
+
+
+	}
+
+	pawn_movement(pozicia,x,y,pole,c_m){
+		if (pozicia[0] == 'P'){
+
+
+				for (let poz of this.pawn[pozicia[1]]['utok']) {
+
+					try {
+
+
+						if ((this.pole_figurky[poz[1]+y][poz[0]+x][1] != pozicia[1]) && (this.pole_figurky[poz[1]+y][poz[0]+x][1] != '')){
+
+							this.clicked_field.push([poz[0]+x,poz[1]+y])
+
+						}
+
+						this.sach_mat_pole.push([poz[0]+x,poz[1]+y])
+					} catch {
+
+					}
+
+				}
+
+			if (!c_m){
+				console.log(1)
+				for (let poz of this.pawn[pozicia[1]]['vpred']) { //pozicia = [znak, farba]
+					try {
+						if (this.pole_figurky[poz[1]+y][poz[0]+x][1] == ''){
+
+							pole.push([poz[0]+x,y+poz[1]])
+						}
+					}catch{
+
+						}
+						if ((y == 1 && pozicia[1] == 'red') || (y == 6 && pozicia[1] == 'green')){
+							continue
+						}else{
+							break
+						}
+
+				}
+			}
+
+
+		}
+
+	}
+	sachovnica(){
+    	// echo '<div class="this.container">';
+      var hl = document.getElementsByTagName('body')[0];
+
+      this.container.style.minWidth = ((this.sirka_pola+2)*8)+'px';
+      let color = ['white', 'black'];
+		for (let y = 0;y<this.rozmer;y++){
+        	// echo '<div class="rad" style="min-width:'.((this.sirka_pola+2)*8)+'px;">';
+			var rad = document.createElement('div');
+      rad.setAttribute('class', 'rad');
+
+      this.container.appendChild(rad);
+    	for (let x = 0;x<this.rozmer;x++){
+
+        		// echo '<div '.let style_div+' class="pole"><div class="panacik">'+this.pole_figurky[y][x][0]+'</div></div>';
+              var policko = document.createElement('div');
+            	policko.setAttribute('class', 'pole');
+							policko.addEventListener("click", klike1);
+              let text = document.createTextNode(this.pole_figurky[y][x][0]);
+							let panacik = document.createElement('div')
+							panacik.setAttribute('class', 'panacik');
+              panacik.appendChild(text);
+							policko.appendChild(panacik);
+							policko.addEventListener("click", this.kliknutie);
+           		policko.setAttribute('style', 'color:'+this.pole_figurky[y][x][1]+';background-color:'+ color[(x+y)%2]+';width:'+this.sirka_pola+'px;height:'+this.sirka_pola+'px');
+
+      			this.container.children[y].insertBefore(policko, null);
+					}
+
+					// echo '</div>';
+
+   	 	}
+
+        hl.appendChild(this.container);
+    	// echo '</div>';
+	}
+    pridanie_panacikov(){
+    	this.add_pes();
+      this.add_hl();
+    }
+    hra(){
+    	this.vytvor_polia();
+
+      this.pridanie_panacikov();
+
+
+    	this.sachovnica();
+			//this.po_kliknuti([[5,5]]);
+
+    }
+
+}
+
+
+let hra = new sach(50);
+hra.hra();
+function klike1(event){
+
+	//var pozicia = this.pole_figurky[Math.floor(event.y/this.rozmer)][Math.floor(event.x/this.rozmer)][0];
+	hra.klike(event)
+
+}
+
+</script>
+
+
+</body>
+</html>
